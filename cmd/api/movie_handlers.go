@@ -4,12 +4,17 @@ import (
 	"backend/models"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
+
+type jsonResp struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
 
 func (app *application) getOneMovie(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
@@ -93,21 +98,50 @@ type MoviePayload struct {
 	ReleaseDate string `json:"release_date"`
 	Runtime     string `json:"runtime"`
 	Rating      string `json:"rating"`
+	MPAARating  string `json:"mpaa_rating"`
 }
 
 func (app *application) editMovie(w http.ResponseWriter, r *http.Request) {
-	var movie models.Movie
+	var payload MoviePayload
 
-	err := json.NewDecoder(r.Body).Decode(&movie)
+	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
 	}
 
-	log.Println(movie.Title)
+	var movie models.Movie
 
-	type jsonResp struct {
-		OK bool `json:"ok"`
+	if payload.ID != "" {
+		id, _ := strconv.Atoi(payload.ID)
+		m, _ := app.models.DB.Get(id)
+		movie = *m
+		movie.UpdatedAt = time.Now()
+	}
+
+	movie.ID, _ = strconv.Atoi(payload.ID)
+	movie.Title = payload.Title
+	movie.Description = payload.Description
+	movie.ReleaseDate, _ = time.Parse("2006-01-02", payload.ReleaseDate)
+	movie.Year = movie.ReleaseDate.Year()
+	movie.Runtime, _ = strconv.Atoi(payload.Runtime)
+	movie.Rating, _ = strconv.Atoi(payload.Rating)
+	movie.MPAARating = payload.MPAARating
+	movie.CreatedAt = time.Now()
+	movie.UpdatedAt = time.Now()
+
+	if movie.ID == 0 {
+		err = app.models.DB.InsertMovie(movie)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
+	} else {
+		err = app.models.DB.UpdateMovie(movie)
+		if err != nil {
+			app.errorJSON(w, err)
+			return
+		}
 	}
 
 	ok := jsonResp{
