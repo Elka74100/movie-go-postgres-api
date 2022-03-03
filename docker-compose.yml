@@ -1,0 +1,13 @@
+version: '3.1'
+
+services:
+  db:
+    image: "postgres" # use latest official postgres version
+    environment:
+        POSTGRES_DB: my_db_name
+        POSTGRES_PASSWORD: magical_password
+    ports:
+        - 5432:5432
+    volumes:
+        - ./sql/go_movies.sql:/docker-entrypoint-initdb.d/go_movies.sql
+
