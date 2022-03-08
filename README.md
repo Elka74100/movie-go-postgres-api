@@ -1,5 +1,16 @@
 # movie-go-postgres-api
 
-execute docker-compose up to get the databse 
+Get the databe 
+```
+docker-compose up
+```
 
-execute go run cmd/api/*.go  to run the backend
+Run the backend
+```
+go run ./cmd/api
+```
+
+Run tests
+```
+go test .cmd/api
+```
