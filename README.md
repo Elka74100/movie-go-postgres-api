@@ -1,6 +1,6 @@
 # movie-go-postgres-api
 
-Get the databe 
+Get the database
 ```
 docker-compose up
 ```
